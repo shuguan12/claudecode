@@ -1,0 +1,334 @@
+# WeChat SVG Interactive Generator
+
+Generate interactive SVG content optimized for WeChat Official Accounts (微信公众号). Output can be directly pasted into WeChat editor with full animation and click interaction support.
+
+## ⚠️ Critical WeChat Limitations
+
+WeChat has strict SVG restrictions. **Everything below is essential reading:**
+
+### 🚫 What WeChat DOES NOT Support
+
+| Limitation | Details |
+|------------|---------|
+| **No JavaScript** | Not even one line. Zero JS allowed. |
+| **No CSS Animations** | `@keyframes` and `transition` are completely ignored |
+| **No id.click triggers** | `begin="element.click"` does NOT work |
+| **No Color Gradients** | `<linearGradient>` and `<radialGradient>` are stripped |
+| **Unreliable Timed Animations** | `begin="2s"` and delays don't work on mobile |
+| **clipPath Overflow** | Images clipped with clipPath will bleed outside rounded corners |
+
+### ✅ Verified Solutions
+
+#### 1. Click Triggers: Use `mousedown` Instead of `id.click`
+
+```xml
+<!-- ❌ WRONG - Does not work in WeChat -->
+<animate attributeName="opacity" begin="button.click" dur="0.3s" from="0" to="1"/>
+
+<!-- ✅ CORRECT - Use mousedown directly on the element -->
+<animate attributeName="opacity" begin="mousedown" dur="0.3s" from="0" to="1"/>
+```
+
+#### 2. Rounded Images: Use Pattern Instead of clipPath
+
+```xml
+<!-- ❌ WRONG - Image bleeds outside rounded corners in WeChat -->
+<clipPath id="roundClip">
+  <rect width="160" height="160" rx="80"/>
+</clipPath>
+<image href="photo.jpg" clip-path="url(#roundClip)"/>
+
+<!-- ✅ CORRECT - Pattern fill method -->
+<pattern id="photoPattern" patternUnits="objectBoundingBox" width="1" height="1">
+  <image href="photo.jpg" preserveAspectRatio="xMidYMid slice" width="160" height="160"/>
+</pattern>
+<rect width="160" height="160" rx="80" fill="url(#photoPattern)"/>
+```
+
+#### 3. Animations: Use SMIL with mousedown/mouseup
+
+```xml
+<!-- Button scale effect on click -->
+<g>
+  <rect id="btn" width="200" height="60" rx="30" fill="#ff6b35"/>
+  <animate xlink:href="#btn" attributeName="transform"
+           type="scale" begin="mousedown" end="mouseup"
+           from="1" to="0.95" dur="0.1s" fill="freeze"/>
+</g>
+
+<!-- Reveal hidden content -->
+<g id="hiddenContent" opacity="0">
+  <text>Hidden Message!</text>
+  <animate attributeName="opacity" begin="mousedown" dur="0.5s" from="0" to="1"/>
+</g>
+```
+
+#### 4. No Gradients: Use Solid Colors or Masks
+
+```xml
+<!-- ❌ WRONG - Gradients are stripped -->
+<linearGradient id="btnGrad">...</linearGradient>
+<rect fill="url(#btnGrad)"/>
+
+<!-- ✅ CORRECT - Use solid colors with overlay -->
+<rect width="200" height="60" rx="30" fill="#ff6b35"/>
+```
+
+## Capabilities
+
+- **Click Interactions**: Multi-step clickable flows, button responses, state changes
+- **SMIL Animations**: Native SVG animations (the only way in WeChat)
+- **WeChat Compatibility**: Uses `mousedown`/`mouseup` triggers exclusively
+- **Pattern-based Rounded Images**: Reliable image clipping for WeChat
+- **Preset Templates**: Mac Terminal, Cyberpunk, Minimal, Glassmorphism, Retro
+- **HTML Preview**: Generates standalone HTML file for browser preview
+- **Copy to Clipboard**: One-click SVG copy for WeChat editor
+
+## Usage
+
+### Interactive Card Example
+```
+Create a WeChat SVG interactive card with:
+- Title: "2026春节祝福"
+- Click to reveal animation
+- Mac terminal style
+- Output HTML preview
+```
+
+### Lottery Wheel Example
+```
+Generate a WeChat SVG lottery wheel:
+- 8 prize sections
+- Spin animation on click
+- Highlight winning section
+- Result popup
+```
+
+### Multi-step Tutorial
+```
+Create a multi-step tutorial SVG:
+- 4 steps with progress indicator
+- Next/Previous navigation
+- Smooth transitions
+- Step content: title + description
+```
+
+## Template Styles
+
+### Mac Terminal
+- Dark background (#1e1e1e)
+- Green/blue syntax highlighting
+- Monospace fonts (SF Mono/Consolas)
+- Command prompt styling (`>`, `$`)
+- Blinking cursor animation (using SMIL)
+- Solid colors only (no gradients)
+
+### Cyberpunk
+- Neon pink/cyan colors
+- Glow effects via SVG filters
+- Grid backgrounds (pattern)
+- Scanline overlays
+- Glitch animations (SMIL)
+- Solid colors only
+
+### Minimal
+- Clean white/light gray
+- Subtle shadows via solid colors
+- Simple typography
+- Smooth transitions via SMIL
+- Rounded corners (rx/ry)
+
+### Glassmorphism (Adapted for WeChat)
+- Frosted glass effect (simulated with semi-transparent fills)
+- Blurred backgrounds (avoid - use solid colors)
+- Gradient overlays (avoid - use solid colors)
+- Semi-transparent elements
+- Soft shadows (avoid - use solid colors)
+
+### Retro
+- Warm color palette (solid colors)
+- Pixel-style elements
+- Scanline textures (pattern)
+- CRT monitor effect
+- VHS color shifting (avoid - use solid colors)
+
+## Output Format
+
+The generator produces:
+1. **HTML Preview File** - Standalone `.html` file with full functionality
+2. **SVG Code** - Extracted SVG code ready for WeChat pasting
+3. **Copy Button** - In the HTML preview, click to copy SVG
+
+## WeChat Compatibility Notes
+
+- WeChat uses `mousedown`/`mouseup` instead of CSS `:active`
+- Use `setPointerEvents()` to handle touch/click events
+- Avoid JavaScript - use CSS animations and SMIL
+- Max recommended size: 500x600px for article embeds
+- Use `cursor: pointer` for clickable elements
+- Include `xlink:href` for backward compatibility
+
+## Complete WeChat-Compatible Example
+
+```xml
+<svg viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+
+  <!-- Background: Solid color (no gradient) -->
+  <rect width="400" height="600" fill="#1a1a2e"/>
+
+  <!-- Rounded Avatar using Pattern -->
+  <defs>
+    <pattern id="avatarPattern" patternUnits="objectBoundingBox"
+             width="1" height="1">
+      <image href="https://example.com/avatar.jpg"
+             preserveAspectRatio="xMidYMid slice"
+             width="120" height="120"/>
+    </pattern>
+    <!-- Pulse animation -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Avatar Circle -->
+  <circle cx="200" cy="120" r="60" fill="url(#avatarPattern)"/>
+
+  <!-- Title -->
+  <text x="200" y="220" text-anchor="middle" font-family="sans-serif"
+        font-size="28" font-weight="bold" fill="#ffffff">
+    点击领取祝福
+  </text>
+
+  <!-- Interactive Button -->
+  <g id="button" style="cursor: pointer">
+    <!-- Button Background -->
+    <rect x="100" y="280" width="200" height="60" rx="30" fill="#ff6b35"/>
+
+    <!-- Button Text -->
+    <text x="200" y="318" text-anchor="middle"
+          font-family="sans-serif" font-size="18" fill="#ffffff">
+      立即领取
+    </text>
+
+    <!-- Scale Animation on Click (mousedown/mouseup) -->
+    <animateTransform xlink:href="#button"
+                      attributeName="transform" type="scale"
+                      begin="mousedown" end="mouseup"
+                      from="1" to="0.95" dur="0.1s" fill="freeze"/>
+  </g>
+
+  <!-- Hidden Result (reveals on click) -->
+  <g id="result" opacity="0">
+    <rect x="50" y="400" width="300" height="120" rx="10" fill="#16213e"/>
+    <text x="200" y="450" text-anchor="middle"
+          font-family="sans-serif" font-size="16" fill="#58a6ff">
+      恭喜获得新年祝福!
+    </text>
+    <text x="200" y="480" text-anchor="middle"
+          font-family="sans-serif" font-size="14" fill="#c9d1d9">
+      感谢您的参与
+    </text>
+
+    <!-- Reveal Animation -->
+    <animate attributeName="opacity" begin="mousedown" dur="0.5s"
+             from="0" to="1" fill="freeze"/>
+  </g>
+
+</svg>
+```
+
+## Common Patterns Reference
+
+### Pattern 1: Click to Reveal
+```xml
+<g id="content" opacity="0">
+  <text>Hidden</text>
+  <animate attributeName="opacity" begin="mousedown" dur="0.3s" from="0" to="1"/>
+</g>
+```
+
+### Pattern 2: Click to Toggle
+```xml
+<g id="toggleContent">
+  <animate attributeName="opacity" values="0;1;0" dur="0.5s" begin="mousedown"/>
+</g>
+```
+
+### Pattern 3: Click to Scale
+```xml
+<g id="btn">
+  <rect width="100" height="40" rx="20" fill="#ff6b35"/>
+  <animateTransform attributeName="transform" type="scale"
+                     begin="mousedown" end="mouseup" from="1" to="0.9"/>
+</g>
+```
+
+### Pattern 4: Sequential Animation
+```xml
+<g id="step2" opacity="0">
+  <text>Step 2</text>
+  <animate attributeName="opacity" begin="mousedown+0.3s" dur="0.3s" from="0" to="1"/>
+</g>
+```
+
+### Pattern 5: Loop Animation
+```xml
+<g>
+  <circle cx="200" cy="300" r="20" fill="#ff6b35">
+    <animate attributeName="r" values="20;30;20" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+</g>
+```
+
+### Pattern 6: Click Trigger Multiple
+```xml
+<rect id="btn" width="150" height="50" rx="25" fill="#58a6ff"/>
+<animate xlink:href="#btn" attributeName="fill" begin="mousedown" dur="0.2s" to="#ff6b35"/>
+<animate xlink:href="#btn" attributeName="fill" begin="mouseup" dur="0.2s" to="#58a6ff"/>
+```
+
+## Trigger Words
+
+- "WeChat SVG", "公众号SVG", "微信公众号"
+- "Interactive card", "交互卡片", "互动内容"
+- "Click animation", "点击动画", "交互动效"
+- "Lottery wheel", "抽奖转盘", "幸运大转盘"
+- "Multi-step", "多步骤", "分步引导"
+- "Mac terminal", "终端风格", "命令行风格"
+- "Preview HTML", "HTML预览", "预览页"
+
+## Best Practices for WeChat
+
+### Performance
+1. **Keep file size under 100KB** for fast loading
+2. **Compress images** before embedding in patterns
+3. **Use simple shapes** instead of complex paths
+
+### Compatibility
+1. **Always use `xlink:href`** for animation references (backward compatibility)
+2. **Use `mousedown`/`mouseup`** for all click interactions
+3. **Use solid colors** - NO gradients
+4. **Use pattern method** for rounded images
+5. **Test on mobile** - viewport ~375px width
+
+### SVG Structure
+1. **Include `xmlns:xlink`** namespace
+2. **Use `cursor: pointer`** on clickable elements
+3. **Add `style="pointer-events: bounding-box"`** for reliable clicks
+4. **Group clickable elements** in `<g>` tags
+
+### Accessibility
+1. **Add `aria-label`** to SVG element
+2. **Use descriptive titles** within SVG
+3. **Consider fallback text** for screen readers
+
+## Related Skills
+
+- `svg-icon-generator` - For simple icon generation
+- `ui-ux-pro-max` - For design guidelines and styling
+- `frontend-design` - For responsive design patterns
